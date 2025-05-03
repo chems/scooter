@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Suivi GPS - scooter_kynan</title>
+  <style>#map { height: 100vh; width: 100%; }</style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+<body>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      databaseURL: "https://connected-scooter-default-rtdb.europe-west1.firebasedatabase.app/"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const map = L.map('map').setView([50.4674, 4.8718], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    // Définir une icône scooter personnalisée
+    const scooterIcon = L.icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/512/2972/2972185.png',
+      iconSize: [40, 40],
+      iconAnchor: [20, 40],
+      popupAnchor: [0, -40]
+    });
+
+    const marker = L.marker([50.4674, 4.8718], { icon: scooterIcon })
+                    .addTo(map)
+                    .bindPopup("En attente...");
+
+    function listenToLatestPosition() {
+      const ref = db.ref("positions");
+      ref.limitToLast(1).on("child_added", (snapshot) => {
+        const data = snapshot.val();
+        const lat = data.lat;
+        const lng = data.lng;
+        const speed = data.speed;
+        const timestamp = new Date(data.timestamp).toLocaleTimeString();
+
+        marker.setLatLng([lat, lng])
+              .setPopupContent(`🛴 scooter_kynan<br>📍 ${lat.toFixed(5)}, ${lng.toFixed(5)}<br>🚀 ${speed} m/s<br>🕒 ${timestamp}`)
+              .openPopup();
+
+        map.setView([lat, lng], 16);
+      });
+    }
+
+    listenToLatestPosition();
+  </script>
+</body>
+</html>
