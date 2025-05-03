@@ -23,7 +23,6 @@
     const map = L.map('map').setView([50.4674, 4.8718], 15);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-    // Définir une icône scooter personnalisée
     const scooterIcon = L.icon({
       iconUrl: 'https://cdn-icons-png.flaticon.com/512/2972/2972185.png',
       iconSize: [40, 40],
@@ -43,9 +42,18 @@
         const lng = data.lng;
         const speed = data.speed;
         const timestamp = new Date(data.timestamp).toLocaleTimeString();
+        const battery = data.battery;
+        const duration = data.duration;
 
         marker.setLatLng([lat, lng])
-              .setPopupContent(`🛴 scooter_kynan<br>📍 ${lat.toFixed(5)}, ${lng.toFixed(5)}<br>🚀 ${speed} m/s<br>🕒 ${timestamp}`)
+              .setPopupContent(
+                `🛴 <b>scooter_kynan</b><br>` +
+                `📍 ${lat.toFixed(5)}, ${lng.toFixed(5)}<br>` +
+                `🚀 <b>Vitesse</b> : ${speed} km/h<br>` +
+                `🔋 <b>Batterie</b> : ${battery} %<br>` +
+                `⏱️ <b>Durée</b> : ${duration}<br>` +
+                `🕒 ${timestamp}`
+              )
               .openPopup();
 
         map.setView([lat, lng], 16);
