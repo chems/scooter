@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Scooter Simulateur</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f9f9f9; }
+    h1 { color: #333; }
+    label, input, button { display: block; margin: 10px 0; width: 100%; }
+    #output { white-space: pre-wrap; background: #fff; padding: 10px; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+
+<h1>🛴 Scooter Connecté</h1>
+
+<label for="username">Nom du client :</label>
+<input type="text" id="username" placeholder="Ex: Kinan">
+
+<p><strong>ID du scooter :</strong> <span id="scooterId"></span></p>
+
+<button onclick="startTracking()">Démarrer le suivi</button>
+
+<h3>📤 Données envoyées :</h3>
+<div id="output">En attente...</div>
+
+<script>
+let scooterId = "scooter_" + Math.random().toString(36).substring(2, 8);
+document.getElementById("scooterId").innerText = scooterId;
+
+let battery = 100.0;
+let startTime = null;
+let interval = null;
+
+function formatDuration(ms) {
+  const min = Math.floor(ms / 60000);
+  const sec = Math.floor((ms % 60000) / 1000);
+  return `${min}min ${sec}s`;
+}
+
+function startTracking() {
+  const username = document.getElementById("username").value;
+  if (!username) {
+    alert("Veuillez saisir votre nom.");
+    return;
+  }
+
+  startTime = Date.now();
+  battery = 100.0;
+
+  interval = setInterval(() => {
+    if (!navigator.geolocation) {
+      alert("La géolocalisation n'est pas supportée.");
+      clearInterval(interval);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(pos => {
+      const now = Date.now();
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const duration = formatDuration(now - startTime);
+      battery = Math.max(0, battery - 0.3);
+
+      const data = {
+        id: scooterId,
+        user: username,
+        lat: parseFloat(lat.toFixed(6)),
+        lng: parseFloat(lng.toFixed(6)),
+        speed: parseFloat((Math.random() * 20).toFixed(1)),  // km/h simulée
+        battery: parseFloat(battery.toFixed(1)),
+        duration: duration,
+        timestamp: now
+      };
+
+      fetch("https://connected-scooter-default-rtdb.europe-west1.firebasedatabase.app/positions.json", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+
+      document.getElementById("output").innerText = JSON.stringify(data, null, 2);
+    });
+  }, 5000);
+}
+</script>
+
+</body>
+</html>
